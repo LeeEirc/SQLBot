@@ -41,12 +41,24 @@ COPY ./backend ${APP_HOME}
 
 # Final sync to ensure all dependencies are installed
 RUN --mount=type=cache,target=/root/.cache/uv \
-   uv sync --extra cpu
+    uv sync --extra cpu
 
 # Build g2-ssr
 FROM registry.cn-qingdao.aliyuncs.com/dataease/sqlbot-base:latest AS ssr-builder
 
 WORKDIR /app
+
+# 安装编译工具和依赖库
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential python3 pkg-config \
+    libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
+    libpixman-1-dev libfreetype6-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 用 BuildKit 缓存 npm 下载，加速重复构建
+RUN npm config set fund false \
+    && npm config set audit false \
+    && npm config set progress false
 
 COPY g2-ssr/app.js g2-ssr/package.json /app/
 COPY g2-ssr/charts/* /app/charts/
