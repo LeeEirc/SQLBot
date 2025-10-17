@@ -25,10 +25,6 @@ jobs:
           ref: ${{ inputs.branch }}
       - name: Setup Environment
         run: |
-          mkdir -p /tmp/.buildx-cache
-          echo "Current Version: ${version}"
-
-          ls -al dist
           echo "image_name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/sqlbot" >> $GITHUB_ENV
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
