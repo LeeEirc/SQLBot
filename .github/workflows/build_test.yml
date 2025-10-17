@@ -1,4 +1,4 @@
-name: build-and-push
+name: build-test-image-ghcr
 
 run-name: 构建分支 ${{ github.event.inputs.branch }} 镜像并推送 ghcr.io ${{ github.event.inputs.tag }}
 
