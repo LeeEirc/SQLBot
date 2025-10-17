@@ -47,4 +47,3 @@ jobs:
           push: true
           file: Dockerfile
           tags: ${{ env.image_name }}:${{ inputs.tag }}
-          outputs: type=image,oci-mediatypes=true,compression=zstd,compression-level=3,force-compression=true
