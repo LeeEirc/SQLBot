@@ -33,7 +33,7 @@ jobs:
           android: true
           dotnet: true
           haskell: true
-          large-packages: true
+          large-packages: false
           swap-storage: true
       - name: Setup Environment
         run: |
@@ -60,6 +60,3 @@ jobs:
           provenance: false
           file: Dockerfile
           tags: ${{ env.image_name }}:${{ inputs.tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          outputs: type=image,name=${{ env.image_name }}:${{ inputs.tag }},push=true,oci-mediatypes=true,compression=zstd,compression-level=3,force-compression=true
