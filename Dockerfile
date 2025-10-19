@@ -1,22 +1,16 @@
 # Build sqlbot
 FROM ghcr.io/1panel-dev/maxkb-vector-model:v1.0.1 AS vector-model
-
 FROM --platform=${BUILDPLATFORM} registry.cn-qingdao.aliyuncs.com/dataease/sqlbot-base:latest AS sqlbot-ui-builder
-
-ENV PYTHONUNBUFFERED=1
 ENV SQLBOT_HOME=/opt/sqlbot
 ENV APP_HOME=${SQLBOT_HOME}/app
 ENV UI_HOME=${SQLBOT_HOME}/frontend
-ENV PYTHONPATH=${SQLBOT_HOME}/app
-ENV PATH="${APP_HOME}/.venv/bin:$PATH"
-ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Create necessary directories
 RUN mkdir -p ${APP_HOME} ${UI_HOME}
+
 COPY frontend /tmp/frontend
 RUN cd /tmp/frontend && npm install && npm run build && mv dist ${UI_HOME}/dist
+
 
 FROM registry.cn-qingdao.aliyuncs.com/dataease/sqlbot-base:latest AS sqlbot-builder
 # Set build environment variables
@@ -50,18 +44,18 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --extra cpu
 
 # Build g2-ssr
-FROM sqlbot-builder AS ssr-builder
+FROM registry.cn-qingdao.aliyuncs.com/dataease/sqlbot-base:latest AS ssr-builder
 
 WORKDIR /app
 
-# 安装编译工具和依赖库
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential python3 pkg-config \
     libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
     libpixman-1-dev libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 用 BuildKit 缓存 npm 下载，加速重复构建
+# configure npm
 RUN npm config set fund false \
     && npm config set audit false \
     && npm config set progress false
