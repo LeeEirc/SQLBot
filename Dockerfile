@@ -1,7 +1,24 @@
 # Build sqlbot
 FROM ghcr.io/1panel-dev/maxkb-vector-model:v1.0.1 AS vector-model
 
-FROM registry.cn-qingdao.aliyuncs.com/dataease/sqlbot-base:latest AS base
+FROM --platform=${BUILDPLATFORM} registry.cn-qingdao.aliyuncs.com/dataease/sqlbot-base:latest AS sqlbot-ui-builder
+
+ENV PYTHONUNBUFFERED=1
+ENV SQLBOT_HOME=/opt/sqlbot
+ENV APP_HOME=${SQLBOT_HOME}/app
+ENV UI_HOME=${SQLBOT_HOME}/frontend
+ENV PYTHONPATH=${SQLBOT_HOME}/app
+ENV PATH="${APP_HOME}/.venv/bin:$PATH"
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Create necessary directories
+RUN mkdir -p ${APP_HOME} ${UI_HOME}
+COPY frontend /tmp/frontend
+RUN cd /tmp/frontend && npm install && npm run build && mv dist ${UI_HOME}/dist
+
+FROM registry.cn-qingdao.aliyuncs.com/dataease/sqlbot-base:latest AS sqlbot-builder
 # Set build environment variables
 ENV PYTHONUNBUFFERED=1
 ENV SQLBOT_HOME=/opt/sqlbot
@@ -15,14 +32,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Create necessary directories
 RUN mkdir -p ${APP_HOME} ${UI_HOME}
-
-FROM --platform=${BUILDPLATFORM} base AS sqlbot-ui-builder
-
-COPY frontend /tmp/frontend
-RUN cd /tmp/frontend && npm install && npm run build && mv dist ${UI_HOME}/dist
-
-
-FROM base AS sqlbot-builder
 
 WORKDIR ${APP_HOME}
 
@@ -41,7 +50,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --extra cpu
 
 # Build g2-ssr
-FROM base AS ssr-builder
+FROM sqlbot-builder AS ssr-builder
 
 WORKDIR /app
 
